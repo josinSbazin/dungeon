@@ -7,7 +7,7 @@ class DungeonMap(filePath: String) {
 
     val rowCount: Int get() = map.size
     val columnCount: Int get() = map[0].size
-    val size: Int get() = rowCount * columnCount
+    val startPosition: Position
 
     init {
         val rawMap = file(filePath).readString()
@@ -16,12 +16,13 @@ class DungeonMap(filePath: String) {
             row
                 .split(" ")
                 .asSequence()
-                .map { MapElement.parse(it) }
+                .map { MapElement.create(it) }
                 .toMutableList()
         }
 
         val rowSize = map.first().size
         check(map.all { it.size == rowSize })
+        startPosition = getStart()
     }
 
     operator fun set(position: Position, newElement: MapElement) {
@@ -30,37 +31,18 @@ class DungeonMap(filePath: String) {
 
     operator fun get(position: Position) = map[position.y][position.x]
 
-    fun getPosition(element: MapElement): Position? {
+    private fun getStart(): Position {
         map.forEachIndexed { y, list ->
-            val x = list.indexOfFirst { it == DungeonMap.MapElement.Start }
+            val x = list.indexOfFirst { it == MapElement.Start }
             if (x != -1) {
                 return Position(x, y)
             }
         }
-        return null
+
+        throw IllegalStateException("Map must contains Start element")
     }
 
-    fun isPositionAvailable(position: Position): Boolean {
-        return when (this[position]) {
-            MapElement.Wall -> false
-            MapElement.Weapon,
-            MapElement.Start,
-            MapElement.Chest,
-            MapElement.Enemy,
-            MapElement.Way -> true
-        }
-    }
-
-    enum class MapElement(val mark: String) {
-        Wall("0"),
-        Way("+"),
-        Start("S"),
-        Weapon("W"),
-        Enemy("E"),
-        Chest("C");
-
-        companion object {
-            fun parse(mark: String) = values().first { it.mark == mark }
-        }
+    fun moveToAvailable(position: Position): Boolean {
+        return this[position].moveAvailable
     }
 }

@@ -8,7 +8,7 @@ import com.rhanza.dungeon.screen.labyrinth.map.Direction
 import com.rhanza.dungeon.screen.labyrinth.map.DungeonMap
 import com.rhanza.dungeon.screen.labyrinth.player.Player
 import com.rhanza.dungeon.screen.labyrinth.player.TravelController
-import com.rhanza.dungeon.screen.labyrinth.room.RoomDrawer
+import com.rhanza.dungeon.screen.labyrinth.room.MapElementDrawer
 import ktx.app.KtxScreen
 import ktx.graphics.use
 
@@ -16,13 +16,11 @@ class LabyrinthScreen(private val game: DungeonGame) : KtxScreen {
     private val camera = OrthographicCamera().apply { setToOrtho(false) }
 
     private val map = DungeonMap("test.dmap")
-    private val roomController = RoomDrawer(game, map, checkNotNull(map.getPosition(DungeonMap.MapElement.Start)) {
-        "Can't find initial position"
-    }, Direction.North)
+    private val roomDrawer = MapElementDrawer(game.batch, map, map.startPosition, Direction.North)
 
     private val travelController = TravelController(map).apply {
         addCurrentPositionListener { _, newPosition, _, newDirection ->
-            roomController.chooseRoom(newPosition, newDirection)
+            roomDrawer.choose(newPosition, newDirection)
         }
     }
 
@@ -46,7 +44,7 @@ class LabyrinthScreen(private val game: DungeonGame) : KtxScreen {
 
     override fun render(delta: Float) {
         game.batch.use(camera) {
-            roomController.draw()
+            roomDrawer.draw()
         }
     }
 }

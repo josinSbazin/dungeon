@@ -3,6 +3,7 @@ package com.rhanza.dungeon.screen.labyrinth.player
 import com.badlogic.gdx.utils.Disposable
 import com.rhanza.dungeon.screen.labyrinth.map.Direction
 import com.rhanza.dungeon.screen.labyrinth.map.DungeonMap
+import com.rhanza.dungeon.screen.labyrinth.map.MapElement
 import com.rhanza.dungeon.screen.labyrinth.map.Position
 
 class TravelController(private val map: DungeonMap) : Disposable {
@@ -17,7 +18,7 @@ class TravelController(private val map: DungeonMap) : Disposable {
     private val nextMovePosition
         get() = currentPosition.getNearestPositionByDirection(currentDirection)
 
-    var currentPosition: Position = checkNotNull(map.getPosition(DungeonMap.MapElement.Start))
+    var currentPosition: Position = checkNotNull(map.startPosition)
         private set(value) {
             currentPositionListeners.forEach {
                 it(field, value, currentDirection, currentDirection)
@@ -78,18 +79,20 @@ class TravelController(private val map: DungeonMap) : Disposable {
             && position.x < map.columnCount
             && position.y >= 0
             && position.y < map.rowCount
-            && map[position] != DungeonMap.MapElement.Wall
+            && map[position] != MapElement.Wall
             && restrictedForMovePositions.none { it == position }
     }
 
     private fun moveTo(position: Position) {
-        restrictedForMovePositions.clear()
+        reapplyRestrivtedPosition(position)
+        currentPosition = position
+    }
 
-        if (map[position] == DungeonMap.MapElement.Enemy) {
+    private fun reapplyRestrivtedPosition(position: Position) {
+        restrictedForMovePositions.clear()
+        if (map[position] == MapElement.Enemy) {
             addAllNearPositionInsteadCurrent(position)
         }
-
-        currentPosition = position
     }
 
     private fun canRotate(isClockwise: Boolean): Boolean {
